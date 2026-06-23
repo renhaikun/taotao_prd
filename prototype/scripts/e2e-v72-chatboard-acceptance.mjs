@@ -120,7 +120,7 @@ async function runChatboardAcceptance(browser) {
   assert(await flowSteps.count() >= expectedStepCount, "Journey board should expose step strips for each flow");
   const cards = page.getByTestId("chatboard-state");
   assert(await cards.count() === stats.stateCount, "Every V7.8 chat state should render");
-  assert(stats.stateCount >= 98, "V7.8 should cover enough production chat-surface states for review after duplicate drawer states are merged");
+  assert(stats.stateCount >= 90, "V7.8 should cover enough production chat-surface states after duplicate private-create states are removed");
   const renderedCardStateIds = await cards.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-state-id")));
   const uniqueRenderedCardStateIds = new Set(renderedCardStateIds);
   assert(uniqueRenderedCardStateIds.size === renderedCardStateIds.length, "Each state should render exactly once in the journey board");
@@ -131,8 +131,8 @@ async function runChatboardAcceptance(browser) {
   assert(new Set(slotStateIds).size === slotStateIds.length, "State slots should not duplicate a state");
   assert(await page.getByTestId("chatboard-unmapped-state").count() === 0, "No state should be left outside the flow journey board");
   assert(stats.preconditionCount >= 5, "V7.8 should cover login, binding, and Taotao creation gates");
-  assert(stats.capsuleCount >= 76, "V7.8 should cover capsule recovery states");
-  assert(stats.capabilityCount >= 22, "V7.8 should cover message-attached AI capability states");
+  assert(stats.capsuleCount >= 70, "V7.8 should cover capsule recovery states");
+  assert(stats.capabilityCount >= 18, "V7.8 should cover message-attached AI capability states");
   assert(stats.overlayCount >= 23, "V7.8 should cover explicit half-sheet states");
 
   const requiredStateIds = [
@@ -180,15 +180,11 @@ async function runChatboardAcceptance(browser) {
     "s3_private_compose_entry",
     "s3f_private_generating",
     "s3n_private_card_ready_to_send",
-    "s3m_private_to_group_confirm",
     "s3o_private_to_group_sending",
     "s3p_private_to_group_send_failed",
-    "s3q_petition_confirm",
     "s3r_petition_sending",
     "s3s_petition_send_failed",
     "s3j_private_generation_failed",
-    "s3g_private_preview_before_send",
-    "s3d_private_exit_unsaved",
     "s4_private_sent_to_group",
     "s4a_no_approval_direct_capsule",
     "s4a_saved_item_detail",
@@ -222,9 +218,6 @@ async function runChatboardAcceptance(browser) {
     "s7h_initiator_closes_petition",
     "s8_settled_light",
     "s8a_settled_fade_out",
-    "s9_completed_memory_hint",
-    "s9a_memory_pending",
-    "s9b_memory_partner_edit_or_reject",
     "s10_multiple_contexts",
     "s11_error_recovery",
     "s11e_misfire_pending_with_cancel",
@@ -233,8 +226,6 @@ async function runChatboardAcceptance(browser) {
     "s11c_partner_long_unread",
     "s11d_generation_wrong_feedback",
     "s11h_wrong_feedback_updating_inline",
-    "s12_reminder_permission",
-    "s12a_permission_sheet",
     "s13_safety_boundary",
   ];
   for (const stateId of requiredStateIds) {
@@ -248,6 +239,15 @@ async function runChatboardAcceptance(browser) {
     "s3c_resume_private_draft",
     "s6x_single_capsule_opens_drawer",
     "s3j_private_generation_failed_saved",
+    "s3m_private_to_group_confirm",
+    "s3q_petition_confirm",
+    "s3g_private_preview_before_send",
+    "s3d_private_exit_unsaved",
+    "s9_completed_memory_hint",
+    "s9a_memory_pending",
+    "s9b_memory_partner_edit_or_reject",
+    "s12_reminder_permission",
+    "s12a_permission_sheet",
   ];
   for (const stateId of removedStateIds) {
     assert(!chatDisplayStates.some((state) => state.id === stateId), `Removed duplicate/confusing state should not return: ${stateId}`);
@@ -352,7 +352,7 @@ async function runChatboardAcceptance(browser) {
     phoneDomText: node.querySelector("[data-testid='chatboard-phone-preview']")?.textContent ?? "",
   })));
 
-  const messageOptionalStateIds = new Set(["s3d_private_exit_unsaved", "s4a_no_approval_direct_capsule", "s4a_saved_item_detail", "s6_receiver_opens_capsule"]);
+  const messageOptionalStateIds = new Set(["s4a_no_approval_direct_capsule", "s4a_saved_item_detail", "s6_receiver_opens_capsule"]);
   const brokenBase = renderedAudit.filter((state) => {
     if (!state.hasPhone || !state.hasHeader || state.reviewSlotCount !== 6 || state.productionContractCount !== 1) return true;
     if (state.phoneKind === "gate") {
@@ -532,16 +532,13 @@ async function runChatboardAcceptance(browser) {
   const privateCompose = renderedAudit.find((state) => state.stateId === "s3_private_compose_entry");
   assert(privateCompose?.visibility === "private" && privateCompose.overlay === "active" && privateCompose.capsule === "idle", "Private compose should use explicit private half-sheet and no shared capsule state");
   assert(privateCompose.participantStatus === "not_visible" && privateCompose.flowId === "private_create", "Private compose should be private in the production contract");
-  assert(privateCompose.phoneText.includes("新建小事") && privateCompose.phoneText.includes("补齐信息") && privateCompose.phoneText.includes("创建") && privateCompose.sheetCloseCount === 1 && !privateCompose.overlayActions.includes("放弃") && !privateCompose.phoneText.includes("整理一下") && !privateCompose.phoneText.includes("想到什么都可以先放下") && !privateCompose.phoneText.includes("好好说"), "Private compose entry should create a concrete small-item card with a natural close control, not a generic organize flow");
+  assert(privateCompose.phoneText.includes("新建小事") && privateCompose.phoneText.includes("顺手加一句") && privateCompose.phoneText.includes("创建") && privateCompose.sheetCloseCount === 1 && privateCompose.hasResultPreview && !privateCompose.overlayActions.includes("放弃") && !privateCompose.phoneText.includes("补齐信息") && !privateCompose.phoneText.includes("待补充") && !privateCompose.phoneText.includes("整理一下") && !privateCompose.phoneText.includes("想到什么都可以先放下") && !privateCompose.phoneText.includes("好好说"), "Private compose entry should let a light thought become a small item with Taotao chat, not a form-completion flow");
   assert(!/给阿川看|只提醒我|一起定|放小窝|保存|发送|上书|发给阿川|请阿川确认/.test(privateCompose.phoneDomText), "Private compose entry must not choose destination before generation");
   assert(privateCompose.hasSheetSuggestions && privateCompose.hasPrivateThread && privateCompose.privateThreadAvatarCount >= 2 && privateCompose.sheetMode === "private-create", "Private compose sheet must include lightweight create chips and an avatar-based Taotao private thread");
 
   const privateReadyToSend = renderedAudit.find((state) => state.stateId === "s3n_private_card_ready_to_send");
-  assert(privateReadyToSend?.visibility === "private" && privateReadyToSend.overlay === "active" && privateReadyToSend.hasResultPreview && privateReadyToSend.overlayActionStyle === "destination" && privateReadyToSend.sheetCloseCount === 1 && !privateReadyToSend.hasEditComposer && privateReadyToSend.phoneText.includes("保存") && privateReadyToSend.phoneText.includes("发送") && privateReadyToSend.phoneText.includes("上书") && !privateReadyToSend.phoneText.includes("放弃") && !privateReadyToSend.phoneText.includes("发给阿川") && !privateReadyToSend.phoneText.includes("请阿川确认") && privateReadyToSend.phoneText.includes("今晚吃饭") && privateReadyToSend.phoneText.includes("时间：") && privateReadyToSend.phoneText.includes("地点：") && privateReadyToSend.phoneText.includes("备注："), "Private generated card should be a concrete item preview without input, then offer save/send/petition destinations plus a natural close control");
+  assert(privateReadyToSend?.visibility === "private" && privateReadyToSend.overlay === "active" && privateReadyToSend.hasResultPreview && privateReadyToSend.overlayActionStyle === "destination" && privateReadyToSend.sheetCloseCount === 1 && !privateReadyToSend.hasEditComposer && privateReadyToSend.phoneText.includes("保存") && privateReadyToSend.phoneText.includes("发送") && privateReadyToSend.phoneText.includes("上书") && !privateReadyToSend.phoneText.includes("放弃") && !privateReadyToSend.phoneText.includes("发给阿川") && !privateReadyToSend.phoneText.includes("请阿川确认") && privateReadyToSend.phoneText.includes("今晚楼下小馆") && !privateReadyToSend.phoneText.includes("时间：") && !privateReadyToSend.phoneText.includes("地点：") && !privateReadyToSend.phoneText.includes("备注：") && !privateReadyToSend.phoneText.includes("待补充"), "Private generated card should read like a light small-item preview, not a strict field form");
   assert(sameList(privateReadyToSend.overlayActions, ["保存", "发送", "上书"]) && privateReadyToSend.productionActionIds.includes("save_private") && privateReadyToSend.productionActionIds.includes("send_to_chat") && privateReadyToSend.productionActionIds.includes("petition_partner") && !privateReadyToSend.productionActionIds.includes("discard_create"), "Private preview should expose exactly save/send/petition actions; closing is the sheet X");
-
-  const privateToGroupConfirm = renderedAudit.find((state) => state.stateId === "s3m_private_to_group_confirm");
-  assert(privateToGroupConfirm?.visibility === "private" && privateToGroupConfirm.overlay === "active" && privateToGroupConfirm.phoneText.includes("发送到聊天？") && privateToGroupConfirm.phoneText.includes("发送") && privateToGroupConfirm.phoneText.includes("取消") && privateToGroupConfirm.phoneText.includes("今晚吃饭"), "Private-to-group transition should require an explicit send confirmation with generic product copy");
 
   const privateToGroupSending = renderedAudit.find((state) => state.stateId === "s3o_private_to_group_sending");
   assert(privateToGroupSending?.visibility === "private" && privateToGroupSending.lifecycleStatus === "sending" && privateToGroupSending.phoneText.includes("正在发送") && privateToGroupSending.phoneText.includes("发送中") && !privateToGroupSending.phoneText.includes("发给阿川"), "Private-to-group sending should bridge private preview and shared chat without leaking early");
@@ -549,10 +546,6 @@ async function runChatboardAcceptance(browser) {
   const privateToGroupFailed = renderedAudit.find((state) => state.stateId === "s3p_private_to_group_send_failed");
   assert(privateToGroupFailed?.visibility === "private" && privateToGroupFailed.lifecycleStatus === "failed" && privateToGroupFailed.messageRetryCount === 1 && privateToGroupFailed.capsuleTone === "idle", "Private-to-group failure should remain on the sender bubble with a WeChat-like retry icon");
   assert(privateToGroupFailed.participantStatus === "not_visible" && privateToGroupFailed.overlay === "none", "Private send failure should stay recoverable only for the creator without a sheet");
-
-  const petitionConfirm = renderedAudit.find((state) => state.stateId === "s3q_petition_confirm");
-  assert(petitionConfirm?.visibility === "private" && petitionConfirm.overlay === "active" && petitionConfirm.phoneText.includes("保存") && petitionConfirm.phoneText.includes("发送") && petitionConfirm.phoneText.includes("上书") && !petitionConfirm.phoneText.includes("放弃") && petitionConfirm.sheetCloseCount === 1 && petitionConfirm.versionBoardCount >= 1 && !petitionConfirm.phoneText.includes("上书给对方批阅？"), "Petition should be a destination action inside the generated preview, not a blank extra confirmation page");
-  assert(sameList(petitionConfirm.overlayActions, ["保存", "发送", "上书"]) && petitionConfirm.flowId === "destination", "Petition confirm should be the same generated preview destination set");
 
   const petitionSending = renderedAudit.find((state) => state.stateId === "s3r_petition_sending");
   assert(petitionSending?.visibility === "private" && petitionSending.lifecycleStatus === "sending" && petitionSending.phoneText.includes("上书发送中") && petitionSending.versionBoardCount >= 1 && !petitionSending.phoneText.includes("发给阿川"), "Petition sending should not expose a partner-facing item until it succeeds");
@@ -580,22 +573,15 @@ async function runChatboardAcceptance(browser) {
   const privateGenerationFailed = renderedAudit.find((state) => state.stateId === "s3j_private_generation_failed");
   assert(privateGenerationFailed?.visibility === "private" && privateGenerationFailed.overlay === "active" && privateGenerationFailed.phoneText.includes("没创建好") && privateGenerationFailed.phoneText.includes("重试") && privateGenerationFailed.sheetCloseCount === 1 && !privateGenerationFailed.phoneText.includes("放弃") && !privateGenerationFailed.phoneText.includes("草稿"), "Private generation failure should offer retry plus sheet close without creating a draft");
 
-  const privatePreview = renderedAudit.find((state) => state.stateId === "s3g_private_preview_before_send");
-  assert(privatePreview?.overlay === "active" && privatePreview.phoneText.includes("今晚吃饭") && privatePreview.hasResultPreview && privatePreview.overlayActionStyle === "destination" && privatePreview.sheetCloseCount === 1 && !privatePreview.hasEditComposer && privatePreview.phoneText.includes("保存") && privatePreview.phoneText.includes("发送") && privatePreview.phoneText.includes("上书") && !privatePreview.phoneText.includes("放弃"), "Private preview should choose save/send/petition after generation without an edit composer; close is the X");
-  assert(sameList(privatePreview.overlayActions, ["保存", "发送", "上书"]), "Private preview action set should stay identical across preview states");
-
-  const exitUnsaved = renderedAudit.find((state) => state.stateId === "s3d_private_exit_unsaved");
-  assert(exitUnsaved?.overlay === "active" && exitUnsaved.phoneText.includes("继续创建") && exitUnsaved.sheetCloseCount === 1 && !exitUnsaved.phoneText.includes("放弃") && !exitUnsaved.phoneText.includes("保存") && !exitUnsaved.phoneText.includes("删除"), "Closing private compose should use the sheet X, without draft/save/delete/abandon branches");
-
   const privateSent = renderedAudit.find((state) => state.stateId === "s4_private_sent_to_group");
   assert(privateSent?.visibility === "shared" && privateSent.capsule === "active", "Private compose should become shared only after sending to chat");
 
   const noApproval = renderedAudit.find((state) => state.stateId === "s4a_no_approval_direct_capsule");
-  assert(noApproval?.visibility === "private" && noApproval.cardCount === 0 && noApproval.messageCount === 0 && noApproval.taotaoMessageCount === 0 && noApproval.capsule === "quiet", "No-approval saves should return to chat through the user's capsule without sending any chat bubble");
+  assert(noApproval?.visibility === "private" && noApproval.cardCount === 0 && noApproval.messageCount === 0 && noApproval.taotaoMessageCount === 0 && noApproval.capsule === "quiet", "No-approval collected items should return to chat through the user's capsule without sending any chat bubble");
   assert(noApproval.capsuleText.includes("今晚吃饭") && noApproval.capsuleText.includes("已保存") && !noApproval.phoneText.includes("我先自己记一下"), "Private save should be recoverable from the owner capsule only, with no group-chat copy");
 
   const savedItemDetail = renderedAudit.find((state) => state.stateId === "s4a_saved_item_detail");
-  assert(savedItemDetail?.visibility === "private" && savedItemDetail.overlay === "active" && savedItemDetail.messageCount === 0 && savedItemDetail.hasResultPreview && savedItemDetail.phoneText.includes("修改内容") && savedItemDetail.phoneText.includes("删除") && savedItemDetail.phoneText.includes("发送") && savedItemDetail.phoneText.includes("上书") && !savedItemDetail.phoneText.includes("打开刚才保存的那件事"), "Saved private item should reopen as a plain card detail from the capsule, without fake chat messages");
+  assert(savedItemDetail?.visibility === "private" && savedItemDetail.overlay === "active" && savedItemDetail.messageCount === 0 && savedItemDetail.hasResultPreview && savedItemDetail.phoneText.includes("已保存") && savedItemDetail.phoneText.includes("修改内容") && !savedItemDetail.phoneText.includes("删除") && savedItemDetail.phoneText.includes("发送") && savedItemDetail.phoneText.includes("上书") && !savedItemDetail.phoneText.includes("时间：") && !savedItemDetail.phoneText.includes("地点：") && !savedItemDetail.phoneText.includes("备注：") && !savedItemDetail.phoneText.includes("打开刚才保存的那件事"), "Saved private item should reopen as a plain card detail from the capsule, without fake chat messages, strict field labels, or a duplicate delete action");
 
   const approvalCard = renderedAudit.find((state) => state.stateId === "s4b_approval_card_for_partner");
   assert(approvalCard?.phoneText.includes("等对方看") && approvalCard.phoneText.includes("上书") && approvalCard.cardCount === 0 && approvalCard.messageCapabilityCount === 1 && approvalCard.messageCapabilityTexts.some((text) => text.includes("今晚吃饭")), "Petition entry should be a Taotao-attached capability capsule without repeated review labels");
@@ -632,15 +618,15 @@ async function runChatboardAcceptance(browser) {
   assert(
     todayDrawer?.overlay === "active" &&
       todayDrawer.overlayOpenedBy === "top-capsule" &&
-      todayDrawer.drawerFilterCount >= 6 &&
-      todayDrawer.drawerItemCount >= 5 &&
-      todayDrawer.phoneText.includes("今天的小事 5 件") &&
+      todayDrawer.drawerFilterCount >= 5 &&
+      todayDrawer.drawerItemCount >= 4 &&
+      todayDrawer.phoneText.includes("今天的小事 4 件") &&
       todayDrawer.phoneText.includes("全部") &&
       todayDrawer.phoneText.includes("等我看") &&
       todayDrawer.phoneText.includes("等TA看") &&
       todayDrawer.phoneText.includes("已定") &&
       todayDrawer.phoneText.includes("已保存") &&
-      todayDrawer.phoneText.includes("提醒") &&
+      !todayDrawer.phoneText.includes("提醒") &&
       todayDrawer.phoneText.includes("回聊天") &&
       !todayDrawer.phoneText.includes("待准奏") &&
       !todayDrawer.hasEditComposer &&
@@ -751,13 +737,10 @@ async function runChatboardAcceptance(browser) {
   assert(
     multiContext?.overlay === "none" &&
       multiContext.drawerItemCount === 0 &&
-      multiContext.capsuleText.includes("今天的小事 5 件") &&
+      multiContext.capsuleText.includes("今天的小事 4 件") &&
       multiContext.phoneText.includes("1 件等你看"),
     "Multiple contexts should first collapse into the top capsule summary; tapping it goes to the single categorized today drawer"
   );
-
-  const permissionSheet = renderedAudit.find((state) => state.stateId === "s12a_permission_sheet");
-  assert(permissionSheet?.overlay === "active" && permissionSheet.phoneText.includes("打开通知"), "Reminder permission should have a capsule-opened sheet");
 
   const misfirePending = renderedAudit.find((state) => state.stateId === "s11e_misfire_pending_with_cancel");
   assert(misfirePending?.overlay === "none" && misfirePending.messageCapabilityCount === 1 && misfirePending.phoneText.includes("记成小事吗"), "Misfire should ask lightly in chat before creating an item");
@@ -788,14 +771,10 @@ async function runChatboardAcceptance(browser) {
     "s3_private_compose_entry",
     "s3f_private_generating",
     "s3n_private_card_ready_to_send",
-    "s3g_private_preview_before_send",
-    "s3m_private_to_group_confirm",
     "s3o_private_to_group_sending",
     "s3p_private_to_group_send_failed",
-    "s3q_petition_confirm",
     "s3r_petition_sending",
     "s3s_petition_send_failed",
-    "s3d_private_exit_unsaved",
     "s4a_saved_item_detail",
     "s4_private_sent_to_group",
     "s4b_approval_card_for_partner",
@@ -817,7 +796,7 @@ async function runChatboardAcceptance(browser) {
   const passiveStatusLeaks = renderedAudit.filter((state) => passiveStatusStateIds.has(state.stateId) && state.taotaoMessageCount !== 0);
   assert(passiveStatusLeaks.length === 0, `Passive receipts and partner-viewed states must not become Taotao status broadcasts: ${JSON.stringify(passiveStatusLeaks.slice(0, 5))}`);
 
-  const taotaoStatusBroadcastPattern = /已看|看过了|未读|未打开|还没看到|对方晚点看|正在发送|发送失败|没发出去|没送出去|没发回去|今天有\s*\d+\s*件小事|在今天的小事里|等你看|等对方看|已保存|只在你这里|已发出|已上书|发到聊天里了/;
+  const taotaoStatusBroadcastPattern = /已看|看过了|未读|未打开|还没看到|对方晚点看|正在发送|发送失败|没发出去|没送出去|没发回去|今天有\s*\d+\s*件小事|在今天的小事里|等你看|等对方看|已保存|已发出|已上书|发到聊天里了/;
   const taotaoStatusLeaks = renderedAudit.filter((state) => state.taotaoTexts.some((text) => taotaoStatusBroadcastPattern.test(text)));
   assert(taotaoStatusLeaks.length === 0, `Taotao messages should speak as a participant, not broadcast UI status: ${JSON.stringify(taotaoStatusLeaks.slice(0, 5))}`);
 

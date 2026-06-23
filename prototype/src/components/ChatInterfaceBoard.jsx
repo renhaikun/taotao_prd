@@ -743,6 +743,8 @@ function TaotaoMessageAvatar() {
   );
 }
 
+const getActionLabel = (action) => (typeof action === "string" ? action : action.label);
+
 function ChatOverlay({ overlay }) {
   const actions = overlay.actions ?? [];
   const bodyItems = overlay.body ?? [];
@@ -752,7 +754,7 @@ function ChatOverlay({ overlay }) {
   const secondaryOnlyActions = new Set(["收起", "取消"]);
   const busyActions = new Set(["生成中", "发送中"]);
   const usesDestinationActions = overlay.actionStyle === "destination";
-  const showInlineOverlaySubmit = Boolean(overlay.inputPlaceholder && actions.length === 0);
+  const showInlineOverlaySubmit = Boolean(overlay.inputPlaceholder && (actions.length === 0 || overlay.inlineSubmit));
   const renderSuggestions = () =>
     overlay.suggestions ? (
       <div className="chat-overlay-suggestion-block">
@@ -878,16 +880,20 @@ function ChatOverlay({ overlay }) {
       ) : null}
       {actions.length ? (
         <div className="chat-overlay-actions" data-action-style={overlay.actionStyle ?? "default"}>
-          {actions.map((action, index) => (
-            <button
-              aria-disabled={busyActions.has(action) ? "true" : undefined}
-              className={`${index === 0 && !secondaryOnlyActions.has(action) && !usesDestinationActions ? "primary" : ""} ${busyActions.has(action) ? "busy" : ""}`}
-              type="button"
-              key={action}
-            >
-              {action}
-            </button>
-          ))}
+          {actions.map((action, index) => {
+            const label = getActionLabel(action);
+
+            return (
+              <button
+                aria-disabled={busyActions.has(label) ? "true" : undefined}
+                className={`${index === 0 && !secondaryOnlyActions.has(label) && !usesDestinationActions ? "primary" : ""} ${busyActions.has(label) ? "busy" : ""}`}
+                type="button"
+                key={`${label}-${index}`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       ) : null}
     </div>
@@ -922,27 +928,27 @@ function TodayDrawerItems({ items, filters = [] }) {
         </div>
       ) : null}
       <div className="chat-today-drawer" data-testid="chat-today-drawer">
-      {items.map((item) => (
-        <button
-          className={`chat-drawer-item ${item.tone ?? "calm"}`}
-          type="button"
-          data-testid="chat-drawer-item"
-          data-drawer-kind={item.kind}
-          data-drawer-status={item.status}
-          key={item.id}
-        >
-          <span className="chat-drawer-item-dot" />
-          <span className="chat-drawer-item-copy">
-            <em>{item.group}</em>
-            <strong>{item.title}</strong>
-            <small>{item.meta}</small>
-          </span>
-          <span className="chat-drawer-item-actions">
-            <span className="chat-drawer-item-action">{item.action}</span>
-            {item.secondaryAction ? <span className="chat-drawer-item-secondary">{item.secondaryAction}</span> : null}
-          </span>
-        </button>
-      ))}
+        {items.map((item) => (
+          <button
+            className={`chat-drawer-item ${item.tone ?? "calm"}`}
+            type="button"
+            data-testid="chat-drawer-item"
+            data-drawer-kind={item.kind}
+            data-drawer-status={item.status}
+            key={item.id}
+          >
+            <span className="chat-drawer-item-dot" />
+            <span className="chat-drawer-item-copy">
+              <em>{item.group}</em>
+              <strong>{item.title}</strong>
+              <small>{item.meta}</small>
+            </span>
+            <span className="chat-drawer-item-actions">
+              <span className="chat-drawer-item-action">{item.action}</span>
+              {item.secondaryAction ? <span className="chat-drawer-item-secondary">{item.secondaryAction}</span> : null}
+            </span>
+          </button>
+        ))}
       </div>
     </div>
   );
