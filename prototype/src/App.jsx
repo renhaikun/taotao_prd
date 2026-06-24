@@ -2,12 +2,13 @@ import { useState } from "react";
 import { AuthFlow } from "./components/AuthFlow.jsx";
 import { ChatInterfaceBoard } from "./components/ChatInterfaceBoard.jsx";
 import { PrototypeShell } from "./components/PrototypeShell.jsx";
+import { SettingsBoard } from "./components/SettingsBoard.jsx";
+import { TaotaoLifeBoard } from "./components/TaotaoLifeBoard.jsx";
 import { V7Flowboard } from "./components/V7Flowboard.jsx";
 import {
   ChatRoomScreen,
   MemoryNestScreen,
   MiniLinkScreen,
-  TaotaoLifeScreen,
   TodaySceneScreen,
 } from "./components/Screens.jsx";
 import { identityDefaults } from "./data/v33ScenarioData.js";
@@ -17,7 +18,9 @@ export function App() {
   const initialSurface = initialParams.get("surface") === "mini" ? "mini" : "app";
   const [chatboardMode] = useState(initialSurface !== "mini" && (initialParams.get("mode") === "chatboard" || initialParams.get("chatboard") === "1"));
   const [flowboardMode] = useState(initialSurface !== "mini" && (initialParams.get("mode") === "flowboard" || initialParams.get("flowboard") === "1"));
-  const [reviewMode] = useState(!chatboardMode && !flowboardMode && (initialParams.get("mode") === "review" || initialParams.get("review") === "1"));
+  const [taotaoBoardMode] = useState(initialSurface !== "mini" && (initialParams.get("mode") === "taotao" || initialParams.get("taotao") === "1"));
+  const [settingsBoardMode] = useState(initialSurface !== "mini" && (initialParams.get("mode") === "settingsboard" || initialParams.get("settingsboard") === "1"));
+  const [reviewMode] = useState(!chatboardMode && !flowboardMode && !taotaoBoardMode && !settingsBoardMode && (initialParams.get("mode") === "review" || initialParams.get("review") === "1"));
   const [surface, setSurface] = useState(initialSurface);
   const [route, setRoute] = useState("chat");
   const [authStep, setAuthStep] = useState("phone");
@@ -100,6 +103,14 @@ export function App() {
 
   if (chatboardMode) {
     return <ChatInterfaceBoard />;
+  }
+
+  if (taotaoBoardMode) {
+    return <TaotaoLifeBoard />;
+  }
+
+  if (settingsBoardMode) {
+    return <SettingsBoard />;
   }
 
   const updatePrototypeState = (updater) => {
@@ -702,7 +713,6 @@ export function App() {
         />
       ) : null}
       {route === "memories" ? <MemoryNestScreen prototypeState={prototypeState} onConfirmMemory={confirmMemoryDraft} /> : null}
-      {route === "taotao" ? <TaotaoLifeScreen prototypeState={prototypeState} onNavigate={navigate} /> : null}
     </PrototypeShell>
   );
 }

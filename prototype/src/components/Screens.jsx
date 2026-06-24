@@ -218,9 +218,9 @@ export function ChatRoomScreen({
           <h1>{title}</h1>
           <p>{caption}</p>
         </div>
-        <button className="room-life-button" type="button" aria-label="查看桃桃" data-testid="open-taotao-life" onClick={() => onNavigate("taotao")}>
+        <div className="room-life-button passive" aria-hidden="true">
           <Sparkles size={18} />
-        </button>
+        </div>
       </header>
 
       {isCoupleBound ? (
@@ -1072,100 +1072,6 @@ function ProposalNegotiationCard({
         ) : null}
       </div>
     </article>
-  );
-}
-
-export function TaotaoLifeScreen({ prototypeState, onNavigate }) {
-  const lifeStatus = prototypeState.taotaoLife.lifeStatus;
-  const lifeName = prototypeState.identity?.lifeDisplayName ?? prototypeState.taotaoLife.displayName ?? "桃桃";
-  const sourceStatus = prototypeState.sourceMedia?.status ?? "empty";
-  const negotiationStatus = prototypeState.todayNegotiation?.status ?? "suggested";
-  const memoryStatus = prototypeState.nestMemory?.status ?? "empty";
-  const statusCopy = {
-    seed: ["还在种子里", "它已经有名字，还需要一个来源方式正式醒来。"],
-    source_selected: ["已经选好来源", "它会先从一个熟悉的小东西里认识你们。"],
-    forming: ["正在长出来", "它正在从你们的小物里学习动作、语气和边界。"],
-    preview: ["等你点头", "你可以先看看它的样子，也可以改名字。"],
-    pending_partner_confirm: ["等阿川点头", "只有两个人都确认后，它才会一起回应你们。"],
-    awake: ["已经醒来", "难选、难说、想留下的小事，可以先交给它。"],
-  }[lifeStatus] ?? ["正在靠近", "它会随着你们的共同确认慢慢稳定下来。"];
-
-  const sourceCopy = {
-    empty: "还没有选择",
-    selecting: "正在选择",
-    uploaded: `来自${prototypeState.taotaoLife.sourceObject}`,
-    default_embryo: "先用默认小物",
-    unusable: "上一张图看不清",
-  }[sourceStatus] ?? `来自${prototypeState.taotaoLife.sourceObject}`;
-
-  const todoCopy = {
-    waiting_partner: "等阿川回应今晚这件事",
-    countered: "看看阿川改过的版本",
-    accepted: "20:10 轻轻提醒一次",
-    completed: "问问要不要留下",
-    memory_prompted: "小窝里有一件事待确认",
-    converted_to_memory: "最近没有待处理",
-  }[negotiationStatus] ?? (lifeStatus === "awake" ? "最近没有待处理" : "先完成双方确认");
-
-  return (
-    <section
-      className="mobile-page product-screen taotao-life-screen"
-      data-testid="taotao-life-panel"
-      data-life-status={lifeStatus}
-      data-life-display-name={lifeName}
-      data-source-media-status={sourceStatus}
-      data-negotiation-status={negotiationStatus}
-    >
-      <ScreenHeader title={lifeName} caption={`来自桃桃 · ${sourceCopy}`} />
-
-      <div className="life-hero">
-        <div className="life-orbit">
-          <Taotao mood={lifeStatus === "awake" ? "awake" : "thinking"} compact />
-        </div>
-        <div className="life-status-copy">
-          <span>{statusCopy[0]}</span>
-          <h2>{lifeName}</h2>
-          <p>{statusCopy[1]}</p>
-        </div>
-      </div>
-
-      <div className="life-panel-list">
-        <article className="life-panel-item life-todo">
-          <span>现在要处理</span>
-          <strong>{todoCopy}</strong>
-          <p>{negotiationStatus === "memory_prompted" ? "等两个人点头后，这件事才会进小窝。" : "最近没有急事，可以先从聊天里开始。"}</p>
-        </article>
-        <article className="life-panel-item">
-          <span>名字与称呼</span>
-          <strong>{lifeName}</strong>
-          <p>想换一个更像你们的小名，可以在预览页或后续设置里改。</p>
-        </article>
-        <article className="life-panel-item">
-          <span>来源照片</span>
-          <strong>{sourceCopy}</strong>
-          <p>来源可以以后再换；不上传照片时，也会先保留一个温和的默认形象。</p>
-        </article>
-        <article className="life-panel-item">
-          <span>双方确认</span>
-          <strong>{prototypeState.coupleBond.status === "bound" ? "两个人已经点头" : prototypeState.awakenSession.inviteStatus === "created" ? "等阿川确认" : "先由你确认"}</strong>
-          <p>只有两个人都点头后，桃桃才会一起回应你们。</p>
-        </article>
-        <article className="life-panel-item">
-          <span>少打扰</span>
-          <strong>{memoryStatus === "draft" ? "有一件事等确认" : "默认只轻提醒"}</strong>
-          <p>它不会替你们下决定，也不会把没确认的聊天自动变成记忆。</p>
-        </article>
-        <article className="life-panel-item life-actions">
-          <span>可以调整</span>
-          <div className="life-action-row">
-            <button type="button">改名字</button>
-            <button type="button">换来源</button>
-            <button type="button">少打扰</button>
-          </div>
-        </article>
-      </div>
-
-    </section>
   );
 }
 

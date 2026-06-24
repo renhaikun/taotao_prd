@@ -7,6 +7,12 @@ import {
   topCapsulePriorityRules,
   v72ChatBoardVersion,
 } from "../src/data/v72ChatBoardData.js";
+import {
+  getV7TaotaoBoardStats,
+  taotaoPageFlows,
+  taotaoPageStates,
+  v7TaotaoBoardVersion,
+} from "../src/data/v7TaotaoBoardData.js";
 
 const baseURL = process.env.TAOTAO_BASE_URL ?? "http://127.0.0.1:5175";
 
@@ -43,6 +49,9 @@ async function runChatboardAcceptance(browser) {
 
   await page.goto(withQuery("surface=mini&invite=taotao-demo&mode=chatboard"), { waitUntil: "networkidle" });
   assert(await page.getByTestId("app-shell").getAttribute("data-surface") === "mini", "Mini surface should override chatboard mode");
+
+  await page.goto(withQuery("surface=mini&invite=taotao-demo&mode=taotao"), { waitUntil: "networkidle" });
+  assert(await page.getByTestId("app-shell").getAttribute("data-surface") === "mini", "Mini surface should override Taotao board mode");
 
   await page.goto(withQuery("mode=chatboard"), { waitUntil: "networkidle" });
   assert(await page.getByTestId("app-shell").getAttribute("data-prototype-version") === "v7.8", "Chatboard should expose version v7.8");
@@ -928,9 +937,136 @@ async function runChatboardAcceptance(browser) {
   return "v7.8-chatboard-coverage-acceptance";
 }
 
+async function runTaotaoBoardAcceptance(browser) {
+  const page = await browser.newPage({
+    viewport: { width: 1600, height: 1000 },
+    deviceScaleFactor: 1,
+  });
+
+  await page.goto(withQuery("mode=taotao"), { waitUntil: "networkidle" });
+  assert(await page.getByTestId("app-shell").getAttribute("data-prototype-version") === "v7.9", "Taotao board should expose version v7.9");
+  assert(await page.getByTestId("app-shell").getAttribute("data-surface") === "taotao", "Taotao board should expose taotao surface");
+  assert(await page.getByTestId("v7-taotao-board-overview").isVisible(), "Taotao board overview should be visible");
+  assert((await page.getByTestId("v7-taotao-board-overview").innerText()).includes(v7TaotaoBoardVersion), "Taotao board should show its version label");
+  assert(await page.getByTestId("v7-taotao-board-rules").isVisible(), "Taotao board rules should be visible");
+  assert(await page.getByTestId("v7-taotao-board").isVisible(), "Taotao board journey should be visible");
+  assert(await page.getByTestId("taotao-unmapped-state").count() === 0, "Every Taotao state should belong to a flow");
+
+  const knownStateIds = new Set(taotaoPageStates.map((state) => state.id));
+  const stats = getV7TaotaoBoardStats();
+  assert(stats.stateCount >= 8, "Taotao page board should cover entry, identity, rename, calendar review, return, and failure states");
+
+  const flowLanes = page.getByTestId("taotao-flow-lane");
+  assert(await flowLanes.count() === taotaoPageFlows.length, "Every Taotao flow should render");
+  const renderedFlowIds = await flowLanes.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-flow-id")));
+  assert(sameList(renderedFlowIds, taotaoPageFlows.map((flow) => flow.id)), "Taotao flows should render in data order");
+
+  for (const flow of taotaoPageFlows) {
+    assert(flow.id && flow.title && flow.summary && flow.trigger && flow.recovery, `Taotao flow contract is incomplete: ${flow.id}`);
+    assert(flow.stateIds.length >= 2, `Taotao flow needs mapped states: ${flow.id}`);
+    for (const stateId of flow.stateIds) {
+      assert(knownStateIds.has(stateId), `Taotao flow ${flow.id} references missing state: ${stateId}`);
+    }
+  }
+
+  const cards = page.getByTestId("taotao-board-state");
+  assert(await cards.count() === stats.stateCount, "Every Taotao state should render once");
+  const renderedStateIds = await cards.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-state-id")));
+  assert(new Set(renderedStateIds).size === renderedStateIds.length, "Taotao states should not duplicate");
+  assert(taotaoPageStates.every((state) => renderedStateIds.includes(state.id)), "Taotao board should render every data state");
+
+  const previews = page.getByTestId("taotao-page-preview");
+  assert(await previews.count() === stats.stateCount, "Every Taotao state should include one phone preview");
+  assert(await page.locator(".bottom-nav").count() === 0, "Taotao board phone previews must not include bottom tabs");
+  assert(await page.getByTestId("taotao-life-panel").count() === 0, "Old V6 TaotaoLifeScreen panel must not be used in the V7.9 board");
+
+  const contracts = page.getByTestId("taotao-state-contract");
+  assert(await contracts.count() === stats.stateCount, "Every Taotao state should expose a review contract outside the phone UI");
+  const contractRows = await cards.evaluateAll((nodes) => nodes.map((node) => ({
+    stateId: node.getAttribute("data-state-id"),
+    flowId: node.getAttribute("data-flow-id"),
+    lifeStatus: node.getAttribute("data-life-status"),
+    viewerRole: node.getAttribute("data-viewer-role"),
+    visibilityScope: node.getAttribute("data-visibility-scope"),
+    lifecycleStatus: node.getAttribute("data-lifecycle-status"),
+    priority: node.getAttribute("data-priority"),
+    owner: node.getAttribute("data-owner"),
+    apiContract: node.getAttribute("data-api-contract"),
+    analyticsKey: node.getAttribute("data-analytics-key"),
+  })));
+  for (const row of contractRows) {
+    assert(row.stateId && row.flowId && row.lifeStatus && row.viewerRole && row.visibilityScope && row.lifecycleStatus && row.priority && row.owner && row.apiContract && row.analyticsKey, `Taotao state is missing production metadata: ${JSON.stringify(row)}`);
+  }
+  assert(new Set(contractRows.map((row) => row.analyticsKey)).size === contractRows.length, "Taotao analytics keys should be unique");
+
+  const requiredStateIds = [
+    "tp0_chat_entry",
+    "tp1_life_default",
+    "tp2_name_editing",
+    "tp3_name_saved",
+    "tp4_name_failed",
+    "tp5_calendar_open",
+    "tp6_calendar_empty",
+    "tp7_calendar_return_chat",
+  ];
+  for (const stateId of requiredStateIds) {
+    assert(knownStateIds.has(stateId), `Missing required Taotao page state: ${stateId}`);
+  }
+
+  const phoneCopy = await previews.evaluateAll((nodes) => nodes.map((node) => node.innerText).join("\n"));
+  for (const banned of [
+    "apiContract",
+    "analyticsKey",
+    "lifecycleStatus",
+    "visibilityScope",
+    "data-",
+    "P0",
+    "P1",
+    "P2",
+    "AI助手",
+    "功能列表",
+    "开发",
+    "状态机",
+    "暂未开放",
+    "敬请期待",
+    "小窝 Tab",
+    "底部 Tab",
+    "上传照片",
+    "生成形象",
+    "会员",
+    "最近痕迹",
+    "最近留下",
+    "上传桃桃",
+    "你们的桃桃",
+  ]) {
+    assert(!phoneCopy.includes(banned), `Taotao phone previews must not expose internal or postponed copy: ${banned}`);
+  }
+  assert(await page.getByTestId("taotao-chat-entry-cluster").count() >= 1, "Chat entry should use the three-avatar Taotao cluster");
+  assert(await page.getByTestId("taotao-calendar-panel").count() >= 6, "Taotao page should keep calendar visible through default, rename, expanded, and empty states");
+  assert(await page.getByTestId("taotao-rename-sheet").count() === 0, "Rename should be inline on the Taotao page, not a bottom sheet");
+  assert(await page.getByTestId("taotao-rename-inline").count() === 2, "Rename editing and failed states should use inline input rows");
+  assert(await page.getByTestId("taotao-name-saved").count() === 1, "Rename saved state should confirm inline without opening a sheet");
+  assert(
+    await page.locator('[data-state-id="tp6_calendar_empty"]').getByTestId("taotao-life-back").getAttribute("data-nav-target") === "taotao",
+    "Empty calendar back action should return to the Taotao page, not the chat"
+  );
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(withQuery("mode=taotao"), { waitUntil: "networkidle" });
+  assert(await page.getByTestId("taotao-page-preview").first().isVisible(), "Taotao board should render on mobile viewport");
+  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2);
+  assert(!horizontalOverflow, "Taotao board should not create horizontal overflow on mobile");
+
+  await page.close();
+  return "v7.9-taotao-life-board-acceptance";
+}
+
 async function run() {
   const browser = await chromium.launch({ headless: true });
-  const passed = [await runChatboardAcceptance(browser)];
+  const passed = [
+    await runChatboardAcceptance(browser),
+    await runTaotaoBoardAcceptance(browser),
+  ];
   await browser.close();
   console.log(JSON.stringify({ baseURL, passed }, null, 2));
 }

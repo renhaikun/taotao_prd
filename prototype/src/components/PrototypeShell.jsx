@@ -2,20 +2,16 @@ import {
   CheckCircle2,
   MessageCircle,
   Shell,
-  Sparkles,
 } from "lucide-react";
 
 const navItems = [
   ["chat", "聊天", MessageCircle],
-  ["taotao", "桃桃", Sparkles],
   ["memories", "小窝", Shell],
 ];
 
 function getBottomItems(prototypeState) {
-  const lifeName = prototypeState?.identity?.lifeDisplayName ?? "桃桃";
   return [
     ["chat", "聊天", MessageCircle],
-    ["taotao", lifeName, Sparkles],
     ["memories", "小窝", Shell],
   ];
 }
@@ -95,18 +91,6 @@ function getCurrentFlow(route, prototypeState, isAuthed) {
       state: isAuthed ? "已经确认手机号" : "等待确认手机号",
       action: "输入手机号、验证码、轻资料",
       handoff: "完成后回到触发前的聊天卡片。",
-    };
-  }
-
-  if (route === "taotao") {
-    return {
-      id: "life",
-      stage: "awakening",
-      title: "C6 桃桃",
-      screen: "桃桃",
-      state: prototypeState.taotaoLife.lifeStatus === "awake" ? "桃桃已经醒来" : "桃桃还在形成中",
-      action: "查看来源、双方确认和最近小事",
-      handoff: "只查看生命状态，主流程回聊天继续。",
     };
   }
 

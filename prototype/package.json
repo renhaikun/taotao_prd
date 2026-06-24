@@ -26,7 +26,11 @@
     "test:e2e:v76": "node scripts/e2e-v72-chatboard-acceptance.mjs",
     "test:e2e:v77": "node scripts/e2e-v72-chatboard-acceptance.mjs",
     "test:e2e:v78": "node scripts/e2e-v72-chatboard-acceptance.mjs",
+    "test:e2e:v79": "node scripts/e2e-v72-chatboard-acceptance.mjs",
+    "test:e2e:taotao": "node scripts/e2e-v72-chatboard-acceptance.mjs",
     "test:e2e:v8": "node scripts/e2e-v72-chatboard-acceptance.mjs",
+    "test:e2e:v80": "node scripts/e2e-v8-settings-acceptance.mjs",
+    "test:e2e:settings": "node scripts/e2e-v8-settings-acceptance.mjs",
     "screenshots:v4": "node scripts/capture-v4-screenshots.mjs",
     "screenshots:v5": "node scripts/capture-v5-screenshots.mjs",
     "screenshots:v6": "node scripts/capture-v6-screenshots.mjs",
@@ -38,7 +42,9 @@
     "screenshots:v76": "node scripts/capture-v72-chatboard-screenshots.mjs",
     "screenshots:v77": "node scripts/capture-v72-chatboard-screenshots.mjs",
     "screenshots:v78": "node scripts/capture-v72-chatboard-screenshots.mjs",
+    "screenshots:v79": "node scripts/capture-v79-taotao-screenshots.mjs",
     "screenshots:v8": "node scripts/capture-v72-chatboard-screenshots.mjs",
+    "screenshots:v80": "node scripts/capture-v8-settings-screenshots.mjs",
     "qa:v3": "npm run qa:v33",
     "qa:v33": "npm run build && npm run test:e2e:v33 && npm run screenshots:v33",
     "qa:v4": "npm run build && npm run test:e2e:v4 && npm run screenshots:v4",
@@ -52,7 +58,9 @@
     "qa:v76": "npm run build && npm run test:e2e:v76 && npm run screenshots:v76",
     "qa:v77": "npm run build && npm run test:e2e:v77 && npm run screenshots:v77",
     "qa:v78": "npm run build && npm run test:e2e:v78 && npm run screenshots:v78",
-    "qa:v8": "npm run build && npm run test:e2e:v8 && npm run screenshots:v8"
+    "qa:v79": "npm run build && npm run test:e2e:v79 && npm run screenshots:v79",
+    "qa:v8": "npm run build && npm run test:e2e:v8 && npm run screenshots:v8",
+    "qa:v80": "npm run build && npm run test:e2e:v80 && npm run screenshots:v80"
   },
   "dependencies": {
     "@vitejs/plugin-react": "5.0.4",

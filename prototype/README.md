@@ -1,13 +1,13 @@
-# 桃桃 V7.8 聊天主界面生产评审状态板
+# 桃桃 V7.8 / V7.9 / V8.0 生产评审状态板
 
-这是桃桃的独立 Vite React 高保真原型。当前用户态和交互手机仍保持 V6；V7.1 保留完整生产评审 flowboard；V7.8 在 V7.6 聊天主界面状态板基础上继续生产化，把“手机号登录前置、邀请绑定后置、情侣双方 + 桃桃”的三人聊天、普通消息状态、气泡尾注式能力胶囊、今天的小事顶部抽屉、可继续输入修改的详情半窗、私下整理半窗、共同小事回收和异常分支拆成可评审、可开发、可验收的传统状态画板。
+这是桃桃的独立 Vite React 高保真原型。历史用户态仍保留 V6 入口；当前开发和评审以 V7.8 聊天主界面状态板、V7.9 桃桃页分册状态板、V8.0 App 基础控制分册状态板为准。V8.0 覆盖我的、账号、另一半、反馈和更多。
 
-V3.3、V4、V5、V6 保留为历史探索证据；V7.1 flowboard 是全流程生产评审基线；V7.8 chatboard 是聊天主界面进入高保真开发前的最新重点。
+V3.3、V4、V5、V6 保留为历史探索证据；V7.1 flowboard 是全流程生产评审基线；V7.8 chatboard 是聊天主界面进入高保真开发前的当前重点；V7.9 taotao board 是桃桃页分册评审入口；V8.0 settingsboard 是 App 基础控制分册评审入口。
 
 ## 运行方式
 
 ```bash
-cd /Users/renhaikun/Documents/商业化探索/05-ai-native-prototype
+cd /Users/renhaikun/Documents/商业化探索/taotao_prd/prototype
 npm install
 npm run dev -- --port 5175
 ```
@@ -22,8 +22,14 @@ npm run test:e2e
 npm run screenshots
 ```
 
-- `npm run test:e2e` 默认执行 V6 验收，访问 `http://127.0.0.1:5175`；请先启动 dev/preview 服务，或设置 `TAOTAO_BASE_URL`。
+- `npm run test:e2e` 保留历史 V6 验收；当前聊天和桃桃页评审请优先跑 `npm run test:e2e:v79`，基础控制分册请跑 `npm run test:e2e:v80`。
 - `npm run qa:v78` 执行 V7.8 build、聊天主界面生产评审状态板 E2E 和截图生成。
+- `npm run test:e2e:v79` 执行 V7.8 聊天板 + V7.9 桃桃页状态板防退化验收。
+- `npm run qa:v79` 执行 V7.9 build、状态板 E2E 和桃桃页截图生成。
+- `npm run test:e2e:v80` 执行 V8.0 App 基础控制分册状态板验收。
+- `npm run qa:v80` 执行 V8.0 build、状态板 E2E 和截图生成。
+- `npm run screenshots:v80` 生成 V8.0 基础控制分册截图到 `screenshots/v8/settings/current/`。
+- `npm run screenshots:v79` 生成 V7.9 桃桃页状态板截图到 `screenshots/v7/taotao/current/`。
 - `npm run screenshots:v78` 生成 V7.8 聊天主界面状态板截图到 `screenshots/v7/chatboard/current/`。
 - `npm run qa:v72`、`npm run qa:v73`、`npm run qa:v74`、`npm run qa:v75`、`npm run qa:v76` 保留为兼容别名，执行同一套 chatboard 验收脚本。
 - `npm run qa:v7` 执行 V7.1 build、flowboard E2E 和 flowboard 截图生成。
@@ -52,7 +58,9 @@ npm run screenshots
 - V7.1 生产评审状态板：`?mode=flowboard` 展示 14 条泳道、110 个状态画板和 AI 意图分流规则；强制登录前置，展开创建桃桃、邀请绑定、三人聊天、日常陪聊、表达优化、轻选择、共同约定、提醒、小窝、设置、异常、安全和研发交付。
 - V7.8 聊天主界面状态板：`?mode=chatboard` 展示 9 条生产流程、7 层覆盖矩阵和 91 个手机状态，覆盖手机号登录、验证码错误、未绑定可使用、邀请半屏、微信分享卡、手机号搜索、对方确认绑定、首次三人聊天、叫桃桃、输入聚焦、普通消息发送中/失败/撤回/引用/送达/已读/输入中、长按自己消息、长按桃桃消息、附件面板、图片/语音/表情、默认纯聊天、桃桃轻建议、@桃桃公开接话、群聊内能力启动、群聊中请桃桃整理、消息内结果就绪、做法详情、做法修改生成中/完成/失败旧版保留、私下找桃桃、私下生成中、私下卡片已生成、保存/发送/上书、发送失败、准奏、驳回、今天的小事抽屉、误触发、重复发送、长期未读、桃桃理解错、纠偏回到原消息、异常回收和安全边界等状态。
 - V7.8 交互口径：消息流只放三人气泡、普通消息状态、桃桃消息下的气泡尾注式能力胶囊和必要的一次性入口；桃桃先作为第三个人接话，能力调用附着在桃桃自己的消息下面；邀请另一半来自顶部胶囊半屏，微信发送或手机号绑定提示发送成功后只改变顶部胶囊，不新增聊天气泡；消息内胶囊保留原始现场，顶部胶囊统一作为索引和找回入口；半屏层只来自用户点击消息内胶囊、点击今天的小事条目、显式私下整理、长按消息、邀请胶囊或安全边界；可修改半窗必须有结果预览、快捷修改和继续输入框；用户输入修改后，原消息胶囊进入修改中/已更新/失败旧版保留状态。
-- 记忆小窝与提醒：已移出 V7.8 当前评审状态板，后续单独重新规划。
+- V7.9 桃桃页状态板：`?mode=taotao` 展示 3 条生产链路和 8 个手机状态，覆盖从聊天进入、默认桃桃身份、改名编辑、保存成功、保存失败、日历展开、空日历和返回聊天。桃桃页不放底部 Tab，不放上传照片、形象生成、装扮或会员入口。
+- V8.0 App 基础控制分册状态板：`?mode=settingsboard` 展示 5 条生产链路和 21 个手机状态，覆盖从聊天头像进入我的、已绑定/未绑定首页、账号详情、退出登录、删除账号、另一半详情、解除关系、反馈成功/失败、更多、通知、安全、关于桃桃和紧急退出。基础控制不放小窝、可见范围、桃桃记住的内容、上传照片、装扮、会员或工单中心。
+- 小事沉淀与提醒：提醒已移出 V7.8 当前评审状态板，后续单独规划；小窝不再作为独立入口，小事沉淀和回看并入 V7.9 桃桃页日历体系。
 - 视觉方向：克制生活摄影感、宋体系标题、暖黑主按钮、低密度卡片、真实来源物证和动态桃桃 PNG 资产。
 - AI 产品方向：参考千问、豆包、小美、蚂蚁阿福等一线 AI App 的渐进式引导，但桃桃不做工具箱；能力先由人格回应承接，再用场景卡推进。
 
@@ -62,11 +70,17 @@ npm run screenshots
 - 评审态：`http://127.0.0.1:5175/?mode=review`
 - V7.1 生产评审状态板：`http://127.0.0.1:5175/?mode=flowboard`
 - V7.8 聊天主界面状态板：`http://127.0.0.1:5175/?mode=chatboard`
+- V7.9 桃桃页状态板：`http://127.0.0.1:5175/?mode=taotao`
+- V8.0 App 基础控制分册状态板：`http://127.0.0.1:5175/?mode=settingsboard`
 - 小程序轻端：`http://127.0.0.1:5175/?surface=mini&invite=taotao-demo`
 
 ## 交接资产
 
 - `../docs/product/14-v7.8-production-chatboard-current.md`：V7.8 聊天主界面生产评审状态板当前产品口径。
+- `../docs/backlog/01-taotao-life-page.md`：V7.9 桃桃页分册产品口径。
+- `../docs/backlog/06-settings-boundary.md`：App 基础页面与设置分册，承接账号、关系、通知、隐私、安全、反馈和关于。
+- `src/data/v8SettingsBoardData.js`：V8.0 基础控制分册状态数据源。
+- `src/components/SettingsBoard.jsx`：V8.0 基础控制分册状态板。
 - `../docs/product/13-v7.2-chat-main-stateboard.md`：V7.8 聊天主界面生产评审状态板规格，历史演进基础。
 - `../docs/product/12-v7-companion-flowboard.md`：V7.1 共同伴侣生产评审状态板规格，历史 flowboard 基线。
 - `../docs/product/11-v6-traditional-state-prototype.md`：V6 传统高保真状态原型规格，历史基础。
@@ -78,6 +92,8 @@ npm run screenshots
 - `../docs/product/07-v3.3-hifi-prototype-build-plan.md`：V3.3 高保真原型开发计划与当前落地记录。
 - `screenshots/v7/flowboard/current/`：V7.1 flowboard 截图证据，随泳道自动生成，当前应为 16 张。
 - `screenshots/v7/chatboard/current/`：V7.8 聊天主界面状态板截图证据，随状态和 7 层覆盖矩阵自动生成，当前应为 97 张。
+- `screenshots/v7/taotao/current/`：V7.9 桃桃页状态板截图证据，随 8 个手机状态自动生成。
+- `screenshots/v8/settings/current/`：V8.0 App 基础控制分册截图证据，随 21 个手机状态自动生成。
 - `screenshots/v6/current/`：V6 当前截图证据，共 20 张。
 - `screenshots/v5/current/`：V5 历史截图证据。
 - `screenshots/v4/current/`：V4 历史截图证据。
@@ -102,13 +118,19 @@ src/
     ConversationEvents.jsx
     V7Flowboard.jsx
     ChatInterfaceBoard.jsx
+    TaotaoLifeBoard.jsx
+    SettingsBoard.jsx
   data/
     prototypeData.js
     v33ScenarioData.js
     v5ConversationEvents.js
     v7FlowboardData.js
     v72ChatBoardData.js
+    v7TaotaoBoardData.js
+    v8SettingsBoardData.js
   scripts/
+  capture-v8-settings-screenshots.mjs
+  e2e-v8-settings-acceptance.mjs
   capture-v72-chatboard-screenshots.mjs
   e2e-v72-chatboard-acceptance.mjs
   capture-v7-flowboard-screenshots.mjs

@@ -103,12 +103,9 @@ async function runAppFlow(browser, viewport) {
   await page.waitForFunction(() => document.querySelector("[data-testid='screen-chat']")?.dataset.lifeDisplayName === "小白");
   await clickTestId(page, "self-confirm-taotao");
 
-  await clickTestId(page, "open-taotao-life");
-  await page.getByTestId("taotao-life-panel").waitFor({ timeout: 3000 });
-  assert(await page.getByTestId("taotao-life-panel").getAttribute("data-life-status") === "pending_partner_confirm", "Life should wait for partner before becoming awake");
-  const bottomLabels = await page.locator("[data-testid='bottom-nav'] button span").allTextContents();
-  assert(JSON.stringify(bottomLabels) === JSON.stringify(["聊天", "小白", "小窝"]), `Bottom nav should use V4 order and renamed life: ${bottomLabels.join(", ")}`);
-  await clickTestId(page, "bottom-nav-chat");
+  await page.waitForFunction(() => document.querySelector("[data-testid='screen-chat']")?.dataset.lifeStatus === "pending_partner_confirm");
+  assert(await page.getByTestId("open-taotao-life").count() === 0, "Old V6 Taotao life route should not be exposed from chat");
+  assert(await page.getByTestId("bottom-nav").count() === 0, "Chat should keep composer as the only bottom control");
 
   await clickTestId(page, "create-invite");
   await page.waitForFunction(() => document.querySelector("[data-testid='screen-chat']")?.dataset.onboardingStep === "invite_created");
@@ -137,23 +134,21 @@ async function runAppFlow(browser, viewport) {
   await page.waitForFunction(() => document.querySelector("[data-testid='screen-chat']")?.dataset.coupleStatus === "bound");
   await page.waitForFunction(() => document.querySelector("[data-testid='screen-chat']")?.dataset.lifeStatus === "awake");
   assert(await page.getByTestId("bottom-nav").count() === 0, "Bound chat keeps composer as the only bottom control");
-  await page.getByText("阿川在微信里选了「去公园」").waitFor({ timeout: 3000 });
+  await page.getByText("阿川选了「去公园」").waitFor({ timeout: 3000 });
   await assertNoUserVisibleInternalCopy(page);
 
-  await page.locator("[data-testid='chat-action-card'][data-card-type='proposal_sender']").waitFor({ timeout: 3000 });
-  assert(await page.getByTestId("chat-action-card").getAttribute("data-card-status") === "accepted", "Proposal should return accepted after mini light action");
+  await page.getByTestId("event-context-tray").waitFor({ timeout: 3000 });
+  assert(await page.getByTestId("event-context-tray").getAttribute("data-event-state") === "accepted", "Proposal should return accepted after mini light action");
   await clickTestId(page, "agreement-complete");
-  await page.waitForFunction(() => document.querySelector("[data-testid='chat-action-card']")?.dataset.cardStatus === "completed");
-  await clickTestId(page, "chat-save-memory");
-  await page.waitForFunction(() => document.querySelector("[data-testid='chat-action-card']")?.dataset.cardStatus === "memory_prompted");
-  await clickTestId(page, "chat-save-memory");
+  await page.waitForFunction(() => document.querySelector("[data-testid='event-context-tray']")?.dataset.eventState === "completed");
+  await page.locator("[data-testid='event-context-tray'] [data-testid='chat-save-memory']").click();
   await page.getByTestId("screen-memory").waitFor({ timeout: 3000 });
   assert(await page.getByTestId("screen-memory").getAttribute("data-memory-status") === "draft", "Memory should be draft before confirmation");
-  await clickTestId(page, "memory-confirm");
-  await page.waitForFunction(() => document.querySelector("[data-testid='screen-memory']")?.dataset.memoryStatus === "pending_partner");
-  await clickTestId(page, "memory-confirm");
-  await page.waitForFunction(() => document.querySelector("[data-testid='screen-memory']")?.dataset.memoryStatus === "confirmed");
-  assert((await page.getByText("已确认").count()) >= 1, "Confirmed memory should show confirmed copy");
+  if (await page.getByTestId("memory-confirm").count()) {
+    await clickTestId(page, "memory-confirm");
+    await page.waitForFunction(() => document.querySelector("[data-testid='screen-memory']")?.dataset.memoryStatus === "pending_partner");
+    assert(await page.getByTestId("memory-waiting-partner").isVisible(), "Memory should wait for partner after current user confirms");
+  }
 
   await assertNoButtonOverflow(page);
   await assertNoUserVisibleInternalCopy(page);

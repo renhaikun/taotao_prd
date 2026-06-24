@@ -76,9 +76,7 @@ async function run() {
   await clickTestId(page, "life-name-save");
   await capture(page, "app-07-life-preview-renamed.png", "自定义名预览");
   await clickTestId(page, "self-confirm-taotao");
-  await clickTestId(page, "open-taotao-life");
-  await capture(page, "app-08-life-pending-partner.png", "自定义名等待另一半确认");
-  await clickTestId(page, "bottom-nav-chat");
+  await capture(page, "app-08-life-pending-partner.png", "聊天内等待另一半确认");
   await clickTestId(page, "create-invite");
   await capture(page, "app-09-invite-created.png", "聊天内微信邀请卡");
   await clickButton(page, "邀请已打开");
